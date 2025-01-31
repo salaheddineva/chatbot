@@ -1,23 +1,23 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Response;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
 Route::get('/resources/images/{filename}', function($filename){
-    $path = resource_path() . '/js/images/' . $filename;
+    $fileContent = !app()->environment('local')
+        ? file_get_contents(asset('images/'.$filename))
+        : file_get_contents(public_path('images/'.$filename));
+    $mimeType = !app()->environment('local')
+        ? mime_content_type(asset('images/'.$filename))
+        : File::mimeType(public_path('images/'.$filename));
 
-    if(!File::exists($path)) {
-        return response()->json(['message' => 'Image not found.'], 404);
-    }
-
-    $file = File::get($path);
-    $type = File::mimeType($path);
-
-    $response = Response::make($file, 200);
-    $response->header("Content-Type", $type);
-
-    return $response;
+    return Response::make($fileContent, 200, [
+        'Content-Type' => $mimeType,
+        'Content-Disposition' => 'inline; filename="'.$filename.'"'
+    ]);
 });
