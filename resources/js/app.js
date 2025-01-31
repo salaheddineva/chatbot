@@ -5,7 +5,7 @@ import { instructions } from './utils/conversation_config.js';
 import { RealtimeClient } from './realtime-api-beta/lib/client.js';
 
 const LOCAL_RELAY_SERVER_URL = import.meta.env.VITE_LOCAL_RELAY_SERVER_URL;
-const ASSET_URL_BASE = import.meta.env.VITE_ASSET_URL_BASE;
+const ASSET_URL_BASE = './images';
 const APP_ID = "chatbot-app-c41436bcc524"
 
 const BOT_ACTIONS = {
