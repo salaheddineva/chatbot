@@ -1,0 +1,21 @@
+id: 69193
+name: chatbot
+environments:
+    production:
+        memory: 1024
+        cli-memory: 512
+        runtime: 'php-8.3:al2'
+        build:
+            - 'COMPOSER_MIRROR_PATH_REPOS=1 composer install --no-dev'
+            - 'php artisan event:cache'
+            - 'php vendor/bin/vapor env:pull production && cat .env.production >> .env'
+            - 'npm ci && npm run build && rm -rf node_modules'
+    staging:
+        memory: 1024
+        cli-memory: 512
+        runtime: 'php-8.3:al2'
+        build:
+            - 'COMPOSER_MIRROR_PATH_REPOS=1 composer install'
+            - 'php artisan event:cache'
+            - 'php vendor/bin/vapor env:pull staging && cat .env.staging >> .env'
+            - 'npm ci && npm run build && rm -rf node_modules'
