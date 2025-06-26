@@ -7,6 +7,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/towntown', function () {
+    return view('towntown');
+});
+
 Route::get('/resources/images/{filename}', function($filename){
     $fileContent = !app()->environment('local')
         ? file_get_contents(asset('images/'.$filename))
