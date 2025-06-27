@@ -26,7 +26,7 @@ const [items, setItems] = [[], (item) => items.push(item)];
 const [realtimeEvents, setRealtimeEvents] = [[], (event) => realtimeEvents.push(event)];
 let [isConnected, setIsConnected] = [false, (value) => isConnected = value];
 
-client.updateSession({ 
+client.updateSession({
   turn_detection: { type: 'server_vad' },
   instructions,
   input_audio_transcription: { model: 'whisper-1' },
@@ -137,19 +137,19 @@ function createPopupElements() {
   micImg.style.cursor = 'pointer';
   micImg.addEventListener('click', async () => {
     micImg.src = !isConnected
-      ? `${ASSET_URL_BASE}/${MIC_ACTIONS.STOP}.svg` 
+      ? `${ASSET_URL_BASE}/${MIC_ACTIONS.STOP}.svg`
       : `${ASSET_URL_BASE}/${MIC_ACTIONS.PLAY}.svg`;
     waveImg.style.visibility = isConnected ? 'hidden' : 'visible';
     faceImg.src = isConnected
       ? `${ASSET_URL_BASE}/${BOT_ACTIONS.NORMAL}.png`
       : `${ASSET_URL_BASE}/${BOT_ACTIONS.SPEAKING}.png`;
 
-    isConnected 
-      ? await disconnectConversation() 
+    isConnected
+      ? await disconnectConversation()
       : await connectConversation();
   });
   player.appendChild(micImg);
-  
+
   elements.push(face, player);
 
   return elements;
@@ -165,12 +165,12 @@ async function connectConversation() {
   await wavStreamPlayer.connect();
 
   await client.connect();
-  client.sendUserMessageContent([
-    {
-      type: `input_text`,
-      text: `Hello!`,
-    },
-  ]);
+  // client.sendUserMessageContent([
+  //   {
+  //     type: `input_text`,
+  //     text: `Bonsoir!`,
+  //   },
+  // ]);
 
   if (client.getTurnDetectionType() === 'server_vad') {
     await wavRecorder.record((data) => client.appendInputAudio(data.mono));
