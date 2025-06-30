@@ -23,8 +23,8 @@
 <body class="antialiased text-gray-900 bg-white font-inter with-agent">
   <div class="flex items-center justify-center min-h-screen p-6">
     <div class="w-full max-w-md">
-      <img class="h-48 mx-auto w-80" src="{{ url('/resources/images/towntown-logo_HD.png') }}" alt="TownTown Logo">
-      
+      <img class="mx-auto mb-12 w-80" src="{{ url('/resources/images/towntown-logo_HD.png') }}" alt="TownTown Logo">
+
       <div class="p-8 bg-white border border-gray-200 shadow-xl rounded-3xl">
         <div class="mb-8 text-center">
           <h1 class="mb-2 text-3xl font-bold tracking-tight text-gray-900">
@@ -56,16 +56,82 @@
             </div>
           </div>
 
+          <div id="agent-description" class="hidden p-4 mt-4 border border-gray-200 shadow-sm bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl">
+            <div class="flex items-start space-x-3">
+              <div class="flex-shrink-0 w-2 h-2 mt-2 bg-gray-900 rounded-full"></div>
+              <div class="flex-1">
+                <p id="prospecting-description" class="hidden text-sm leading-relaxed text-gray-700">
+                  Spécialiste en identification de nouvelles opportunités commerciales et en conversion des prospects en clients.
+                </p>
+                <p id="reception-description" class="hidden text-sm leading-relaxed text-gray-700">
+                  Premier point de contact pour accueillir et orienter les clients vers les services adaptés à leurs besoins.
+                </p>
+                <p id="assistant-description" class="hidden text-sm leading-relaxed text-gray-700">
+                  Support personnalisé pour répondre aux questions et accompagner les clients tout au long de leur parcours.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <button type="button" id="start-chat"
             class="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.01] active:scale-[0.99] shadow-lg">
             Commencer la discussion
           </button>
         </form>
-        
+
         <div id="agent-app" class="flex flex-col items-center mt-8"></div>
       </div>
     </div>
   </div>
+
+  <div id="calendar-section" class="fixed z-50 bottom-6 right-6">
+    <a href="#" id="calendar-link" target="_blank" rel="noopener noreferrer"
+      class="inline-flex items-center px-4 py-3 text-sm font-medium text-white transition-all duration-200 transform bg-blue-600 rounded-full shadow-lg hover:bg-blue-700 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 hover:scale-105 active:scale-95">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+      </svg>
+      Calendrier
+    </a>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const calendarSection = document.getElementById('calendar-section');
+      const calendarLink = document.getElementById('calendar-link');
+      
+      const agentSelect = document.getElementById('agent-select');
+      const agentDescription = document.getElementById('agent-description');
+      const descriptions = {
+        'prospecting-agent': document.getElementById('prospecting-description'),
+        'reception-agent': document.getElementById('reception-description'),
+        'assistant-agent': document.getElementById('assistant-description')
+      };
+
+      agentSelect.addEventListener('change', function() {
+        const selectedAgent = agentSelect.value;
+        
+        Object.values(descriptions).forEach(desc => desc.classList.add('hidden'));
+        agentDescription.classList.add('hidden');
+        
+        if (selectedAgent && descriptions[selectedAgent]) {
+          descriptions[selectedAgent].classList.remove('hidden');
+          agentDescription.classList.remove('hidden');
+        }
+      });
+
+      // Get calendar URL from environment variable
+      const calendarUrl = "{{ config('app.google_calendar_url', '') }}";
+      
+      if (calendarUrl) {
+        calendarLink.href = calendarUrl;
+      } else {
+        calendarSection.style.display = 'none';
+      }
+    });
+  </script>
 </body>
 
+</html>
 </html>

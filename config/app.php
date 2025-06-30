@@ -123,4 +123,5 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'google_calendar_url' => env('VITE_GOOGLE_CALENDAR_PUBLIC_URL', null),
 ];

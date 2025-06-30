@@ -1,5 +1,6 @@
 import { RealtimeClient } from '../realtime-api-beta/lib/client.js';
 import { WavRecorder, WavStreamPlayer } from '../lib/wavtools/index.js';
+import { GoogleCalendarService } from '../services/google-calendar.service.js';
 
 const agents = [
   { name: 'prospecting-agent', file: 'prospecting-agent.agent.js' },
@@ -88,9 +89,9 @@ setItems(client.conversation.getItems());
 
 async function isGoodbyeMessage(text) {
   const obviousGoodbyes = ['bye', 'au revoir', 'goodbye'];
-  const lowerText = text.toLowerCase();  
+  const lowerText = text.toLowerCase();
   if (obviousGoodbyes.some(phrase => lowerText.includes(phrase))) return true;
-  
+
   return new Promise((resolve) => {
     const analysisClient = new RealtimeClient({ url: LOCAL_RELAY_SERVER_URL });
     analysisClient.updateSession({
@@ -102,7 +103,7 @@ async function isGoodbyeMessage(text) {
       if (event.type === "response.audio_transcript.done" && !!event.transcript) {
         const possibleResponses = ['oui', 'vrai', 'au revoir', 'adieu', 'bye', 'goodbye'];
         const isGoodbye = possibleResponses.some(phrase => event.transcript.includes(phrase));
-        
+
         analysisClient.disconnect();
         resolve(isGoodbye);
       }
@@ -113,9 +114,9 @@ async function isGoodbyeMessage(text) {
     });
     analysisClient.connect().then(() => {
       analysisClient.sendUserMessageContent([
-        { 
-          type: 'input_text', 
-          text: `Ce message est-il un au revoir ou un adieu ? Répondez seulement par Oui ou Non. Message: "${text}"` 
+        {
+          type: 'input_text',
+          text: `Ce message est-il un au revoir ou un adieu ? Répondez seulement par Oui ou Non. Message: "${text}"`
         }
       ]);
     }).catch(() => {
@@ -164,7 +165,7 @@ function createElements() {
   waveImg.style.height = '35px';
   waveImg.style.visibility = 'hidden';
   player.appendChild(waveImg);
-  
+
   elements.push(faceImg, player);
   return elements;
 }
@@ -183,8 +184,8 @@ async function toggleChat() {
     ? 'Commencer la discussion'
     : 'Terminer la discussion';
 
-  isConnected 
-    ? await disconnectConversation() 
+  isConnected
+    ? await disconnectConversation()
     : await connectConversation();
 }
 
@@ -222,7 +223,101 @@ async function connectConversation() {
   }
   const agentConfig = await import(`./agents/${selectedAgent.file}`);
 
-  client.updateSession({ 
+  if (selectedAgent.name === 'reception-agent') {
+    const calendarService = new GoogleCalendarService(
+      import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      import.meta.env.VITE_GOOGLE_API_KEY,
+      ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
+      ['https://www.googleapis.com/auth/calendar']
+    );
+
+    await calendarService.initialize();
+
+    client.addTool({
+      name: "verifierDisponibiliteCalendrier",
+      description: "Vérifier le calendrier pour les créneaux de rendez-vous disponibles",
+      parameters: {
+        type: "object",
+        properties: {
+          dateDebut: {
+            type: "string",
+            description: "Date de début au format YYYY-MM-DD"
+          },
+          dateFin: {
+            type: "string",
+            description: "Date de fin au format YYYY-MM-DD"
+          },
+          dureeRendezVous: {
+            type: "number",
+            description: "Durée du rendez-vous en minutes"
+          }
+        },
+        required: ["dateDebut", "dateFin", "dureeRendezVous"]
+      }
+    }, async (args) => {
+      try {
+        await calendarService.authenticate();
+        const creneauxDisponibles = await calendarService.findAvailableSlots(
+          args.dureeRendezVous,
+          args.dateDebut,
+          args.dateFin
+        );
+        return { succes: true, creneauxDisponibles };
+      } catch (error) {
+        return { succes: false, erreur: error.message };
+      }
+    });
+
+    client.addTool({
+      name: "planifierRendezVous",
+      description: "Planifier un rendez-vous dans le calendrier",
+      parameters: {
+        type: "object",
+        properties: {
+          resume: {
+            type: "string",
+            description: "Titre ou résumé du rendez-vous"
+          },
+          description: {
+            type: "string",
+            description: "Description détaillée du rendez-vous"
+          },
+          dateHeureDebut: {
+            type: "string",
+            description: "Heure de début au format ISO (YYYY-MM-DDTHH:MM:SS)"
+          },
+          dateHeureFin: {
+            type: "string",
+            description: "Heure de fin au format ISO (YYYY-MM-DDTHH:MM:SS)"
+          },
+          emailsParticipants: {
+            type: "array",
+            items: {
+              type: "string"
+            },
+            description: "Liste des adresses email des participants"
+          }
+        },
+        required: ["resume", "dateHeureDebut", "dateHeureFin"]
+      }
+    }, async (args) => {
+      try {
+        await calendarService.authenticate();
+        const resultat = await calendarService.createAppointment(
+          args.resume,
+          args.description || '',
+          args.dateHeureDebut,
+          args.dateHeureFin,
+          args.emailsParticipants || []
+        );
+        return { succes: true, rendezVous: resultat };
+      } catch (error) {
+        return { succes: false, erreur: error.message };
+      }
+    });
+  }
+
+  client.updateSession({
     turn_detection: { type: 'server_vad', threshold: 0.5, silence_duration_ms: 300 },
     instructions: agentConfig.instructions,
     input_audio_transcription: { model: 'gpt-4o-transcribe' },
@@ -233,14 +328,14 @@ async function connectConversation() {
   await wavStreamPlayer.connect();
 
   await client.connect();
-  client.sendUserMessageContent([ { type: `input_text`, text: `Bonjour !` } ]);
+  client.sendUserMessageContent([{ type: `input_text`, text: `Bonjour !` }]);
 
   if (client.getTurnDetectionType() === 'server_vad') {
     await wavRecorder.record((data) => client.appendInputAudio(data.mono));
   }
 };
 
-async function disconnectConversation () {
+async function disconnectConversation() {
   setIsConnected(false);
   setRealtimeEvents([]);
   setItems([]);
