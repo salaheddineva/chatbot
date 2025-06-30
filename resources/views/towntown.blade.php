@@ -22,7 +22,7 @@
 <body class="antialiased text-gray-900 bg-white font-inter with-agent">
   <div class="flex items-center justify-center min-h-screen p-6">
     <div class="w-full max-w-md">
-      <img class="mx-auto mb-12 w-80" src="{{ url('/resources/images/towntown-logo_HD.png') }}" alt="TownTown Logo">
+      <img class="h-48 mx-auto w-80" src="{{ url('/resources/images/towntown-logo_HD.png') }}" alt="TownTown Logo">
       
       <div class="p-8 bg-white border border-gray-200 shadow-xl rounded-3xl">
         <div class="mb-8 text-center">
@@ -43,8 +43,9 @@
               <select id="agent-select"
                 class="w-full px-4 py-3 text-gray-900 transition-all duration-200 bg-white border border-gray-300 appearance-none cursor-pointer rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent hover:border-gray-400">
                 <option value="">Sélectionnez un agent...</option>
-                <option value="customer-service">Agent Service Client</option>
-                <option value="sales-assistant">Agent Assistant Commercial</option>
+                <option value="prospecting-agent">Agent de prospection</option>
+                <option value="reception-agent">Agent de réception</option>
+                <option value="assistant-agent">Agent assistant</option>
               </select>
               <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,7 +57,7 @@
 
           <button type="button" id="start-chat"
             class="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.01] active:scale-[0.99] shadow-lg">
-            Commencer la Discussion
+            Commencer la discussion
           </button>
         </form>
         

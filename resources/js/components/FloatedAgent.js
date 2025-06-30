@@ -27,7 +27,7 @@ let [isConnected, setIsConnected] = [false, (value) => isConnected = value];
 client.updateSession({ 
   turn_detection: { type: 'server_vad' },
   instructions,
-  input_audio_transcription: { model: 'whisper-1' },
+  input_audio_transcription: { model: 'gpt-4o-transcribe' },
 });
 
 client.on('realtime.event', (realtimeEvent) => {

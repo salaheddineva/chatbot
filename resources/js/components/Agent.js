@@ -2,8 +2,9 @@ import { RealtimeClient } from '../realtime-api-beta/lib/client.js';
 import { WavRecorder, WavStreamPlayer } from '../lib/wavtools/index.js';
 
 const agents = [
-  { name: 'customer-service', file: 'customer-service.agent.js' },
-  { name: 'sales-assistant', file: 'sales-assistant.agent.js' }
+  { name: 'prospecting-agent', file: 'prospecting-agent.agent.js' },
+  { name: 'reception-agent', file: 'reception-agent.agent.js' },
+  { name: 'assistant-agent', file: 'assistant-agent.agent.js' },
 ]
 
 const APP_ID = "chatbot-app-d72849aef615"
@@ -14,6 +15,8 @@ const LOCAL_RELAY_SERVER_URL = import.meta.env.VITE_LOCAL_RELAY_SERVER_URL;
 let [isConnected, setIsConnected] = [false, (value) => isConnected = value];
 const [realtimeEvents, setRealtimeEvents] = [[], (event) => realtimeEvents.push(event)];
 const [items, setItems] = [[], (item) => items.push(item)];
+let userSaidGoodbye = false;
+let aiRespondedWithGoodbye = false;
 
 const client = new RealtimeClient({ url: LOCAL_RELAY_SERVER_URL });
 const wavRecorder = new WavRecorder({ sampleRate: 24000 });
@@ -47,11 +50,12 @@ client.on('conversation.updated', async ({ item, delta }) => {
     wavStreamPlayer.add16BitPCM(delta.audio, item.id);
   }
   if (item.status === 'completed' && item.formatted.audio?.length) {
-    const wavFile = await WavRecorder.decode(
-      item.formatted.audio,
-      24000,
-      24000
-    );
+    const isGoodbye = await isGoodbyeMessage(item.formatted.transcript);
+
+    if (item.role === 'user' && isGoodbye) userSaidGoodbye = true;
+    if (item.role === 'assistant' && isGoodbye) aiRespondedWithGoodbye = true;
+
+    const wavFile = await WavRecorder.decode(item.formatted.audio, 24000, 24000);
     item.formatted.file = wavFile;
   }
   setItems(items);
@@ -60,9 +64,53 @@ client.on('conversation.updated', async ({ item, delta }) => {
   chatbotFace.src = `${ASSET_URL_BASE}/${BOT_ACTIONS.SPEAKING}.png`;
   const chatbotWave = document.getElementById('chatbot-wave');
   chatbotWave.style.visibility = 'visible';
+
+  if (userSaidGoodbye && aiRespondedWithGoodbye) {
+    await toggleChat();
+    userSaidGoodbye = false;
+    aiRespondedWithGoodbye = false;
+  }
 });
 client.on('error', (event) => console.error(event));
 setItems(client.conversation.getItems());
+
+async function isGoodbyeMessage(text) {
+  const obviousGoodbyes = ['bye', 'au revoir', 'goodbye'];
+  const lowerText = text.toLowerCase();  
+  if (obviousGoodbyes.some(phrase => lowerText.includes(phrase))) return true;
+  
+  return new Promise((resolve) => {
+    const analysisClient = new RealtimeClient({ url: LOCAL_RELAY_SERVER_URL });
+    analysisClient.updateSession({
+      instructions: "Votre seule tâche est de déterminer si un message est un au revoir/adieu.",
+      modalities: ["text"],
+      temperature: 0.1
+    });
+    analysisClient.on('realtime.event', ({ event }) => {
+      if (event.type === "response.audio_transcript.done" && !!event.transcript) {
+        const possibleResponses = ['oui', 'vrai', 'au revoir', 'adieu', 'bye', 'goodbye'];
+        const isGoodbye = possibleResponses.some(phrase => event.transcript.includes(phrase));
+        
+        analysisClient.disconnect();
+        resolve(isGoodbye);
+      }
+    });
+    analysisClient.on('error', () => {
+      analysisClient.disconnect();
+      resolve(false);
+    });
+    analysisClient.connect().then(() => {
+      analysisClient.sendUserMessageContent([
+        { 
+          type: 'input_text', 
+          text: `Ce message est-il un au revoir ou un adieu ? Répondez seulement par Oui ou Non. Message: "${text}"` 
+        }
+      ]);
+    }).catch(() => {
+      resolve(false);
+    });
+  });
+}
 
 setTimeout(() => {
   const canDocumentHaveFloatingAgent = window.document.querySelector('.with-agent');
@@ -109,7 +157,7 @@ function createElements() {
   return elements;
 }
 
-async function toggleChat($event) {
+async function toggleChat() {
   const chatbotFace = window.document.getElementById('chatbot-face');
   const chatbotWave = window.document.getElementById('chatbot-wave');
   const startChatButton = window.document.getElementById('start-chat');
@@ -120,8 +168,8 @@ async function toggleChat($event) {
     ? `${ASSET_URL_BASE}/${BOT_ACTIONS.NORMAL}.png`
     : `${ASSET_URL_BASE}/${BOT_ACTIONS.SPEAKING}.png`;
   startChatButton.innerText = isConnected
-    ? 'Commencer la Discussion'
-    : 'Terminer la Discussion';
+    ? 'Commencer la discussion'
+    : 'Terminer la discussion';
 
   isConnected 
     ? await disconnectConversation() 
@@ -134,7 +182,7 @@ async function connectConversation() {
   setItems(client.conversation.getItems());
 
   const agentSelectInput = window.document.getElementById('agent-select');
-  if (!agentSelectInput) {
+  if (!agentSelectInput || !agentSelectInput.value) {
     alert('Veuillez sélectionner un agent avant de commencer la discussion.');
     await toggleChat();
     return;
@@ -148,9 +196,9 @@ async function connectConversation() {
   const agentConfig = await import(`./agents/${selectedAgent.file}`);
 
   client.updateSession({ 
-    turn_detection: { type: 'server_vad' },
+    turn_detection: { type: 'server_vad', threshold: 0.5, silence_duration_ms: 300 },
     instructions: agentConfig.instructions,
-    input_audio_transcription: { model: 'whisper-1' },
+    input_audio_transcription: { model: 'gpt-4o-transcribe' },
   });
 
   await wavRecorder.begin();
