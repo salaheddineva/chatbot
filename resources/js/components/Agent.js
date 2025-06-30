@@ -15,8 +15,8 @@ const LOCAL_RELAY_SERVER_URL = import.meta.env.VITE_LOCAL_RELAY_SERVER_URL;
 let [isConnected, setIsConnected] = [false, (value) => isConnected = value];
 const [realtimeEvents, setRealtimeEvents] = [[], (event) => realtimeEvents.push(event)];
 const [items, setItems] = [[], (item) => items.push(item)];
-let userSaidGoodbye = false;
-let aiRespondedWithGoodbye = false;
+let [userSaidGoodbye, setUserSaidGoodbye] = [false, (value) => userSaidGoodbye = value];
+let [aiRespondedWithGoodbye, setAiRespondedWithGoodbye] = [false, (value) => aiRespondedWithGoodbye = value];
 
 const client = new RealtimeClient({ url: LOCAL_RELAY_SERVER_URL });
 const wavRecorder = new WavRecorder({ sampleRate: 24000 });
@@ -39,6 +39,8 @@ client.on('conversation.interrupted', async () => {
     client.cancelResponse(trackId, offset);
   }
 
+  setAiRespondedWithGoodbye(false);
+
   const chatbotFace = document.getElementById('chatbot-face');
   chatbotFace.src = `${ASSET_URL_BASE}/${BOT_ACTIONS.HEARING}.png`;
   const chatbotWave = document.getElementById('chatbot-wave');
@@ -52,8 +54,8 @@ client.on('conversation.updated', async ({ item, delta }) => {
   if (item.status === 'completed' && item.formatted.audio?.length) {
     const isGoodbye = await isGoodbyeMessage(item.formatted.transcript);
 
-    if (item.role === 'user' && isGoodbye) userSaidGoodbye = true;
-    if (item.role === 'assistant' && isGoodbye) aiRespondedWithGoodbye = true;
+    if (item.role === 'user' && isGoodbye) setUserSaidGoodbye(true);
+    if (item.role === 'assistant' && isGoodbye) setAiRespondedWithGoodbye(true);
 
     const wavFile = await WavRecorder.decode(item.formatted.audio, 24000, 24000);
     item.formatted.file = wavFile;
@@ -65,10 +67,20 @@ client.on('conversation.updated', async ({ item, delta }) => {
   const chatbotWave = document.getElementById('chatbot-wave');
   chatbotWave.style.visibility = 'visible';
 
-  if (userSaidGoodbye && aiRespondedWithGoodbye) {
-    await toggleChat();
-    userSaidGoodbye = false;
-    aiRespondedWithGoodbye = false;
+  if (userSaidGoodbye && aiRespondedWithGoodbye && !wavStreamPlayer.isPlaying()) {
+    await closeChat();
+    setUserSaidGoodbye(false);
+    setAiRespondedWithGoodbye(false);
+  } else if (userSaidGoodbye && aiRespondedWithGoodbye) {
+    const checkPlaybackInterval = setInterval(async () => {
+      if (!wavStreamPlayer.isPlaying()) {
+        clearInterval(checkPlaybackInterval);
+
+        if (userSaidGoodbye && aiRespondedWithGoodbye) await closeChat();
+        setUserSaidGoodbye(false);
+        setAiRespondedWithGoodbye(false);
+      }
+    }, 500);
   }
 });
 client.on('error', (event) => console.error(event));
@@ -174,6 +186,21 @@ async function toggleChat() {
   isConnected 
     ? await disconnectConversation() 
     : await connectConversation();
+}
+
+async function closeChat() {
+  if (!isConnected) return;
+
+  const chatbotFace = window.document.getElementById('chatbot-face');
+  const chatbotWave = window.document.getElementById('chatbot-wave');
+  const startChatButton = window.document.getElementById('start-chat');
+  if (!chatbotFace || !chatbotWave || !startChatButton) return;
+
+  chatbotWave.style.visibility = 'hidden';
+  chatbotFace.src = `${ASSET_URL_BASE}/${BOT_ACTIONS.NORMAL}.png`;
+  startChatButton.innerText = 'Commencer la discussion';
+
+  await disconnectConversation();
 }
 
 async function connectConversation() {

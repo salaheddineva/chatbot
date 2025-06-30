@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="{{ asset('towntown.ico') }}" type="image/x-icon">
 
   <title>Agent TownTown</title>
 
