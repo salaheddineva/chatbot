@@ -42,8 +42,8 @@ class AppointmentService
     $availableSlots = [];
 
     for ($day = $startDate->copy(); $day <= $endDate; $day->addDay()) {
-      $dayStart = $day->copy()->setHour($workingHours['start'])->setMinute(0)->setSecond(0);
-      $dayEnd = $day->copy()->setHour($workingHours['end'])->setMinute(0)->setSecond(0);
+      $dayStart = $day->copy()->setHour((int)$workingHours['start'])->setMinute(0)->setSecond(0);
+      $dayEnd = $day->copy()->setHour((int)$workingHours['end'])->setMinute(0)->setSecond(0);
 
       $conflictingAppointments = $busySlots->filter(function ($appointment) use ($dayStart, $dayEnd) {
         return $appointment->start_time < $dayEnd && $appointment->end_time > $dayStart;

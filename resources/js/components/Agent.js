@@ -256,6 +256,7 @@ async function connectConversation() {
         );
         return { succes: true, creneauxDisponibles };
       } catch (error) {
+        console.error(error);
         return { succes: false, erreur: error.message };
       }
     });

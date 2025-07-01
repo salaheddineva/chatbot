@@ -38,14 +38,15 @@ export class AppointmentService {
   }
 
   async findAvailableSlots(duration, startDate, endDate, workingHours = { start: 9, end: 17 }) {
-    const url = new URL(`${this.baseUrl}/available-slots`);
-    url.searchParams.append('duration', duration);
-    url.searchParams.append('start_date', startDate);
-    url.searchParams.append('end_date', endDate);
-    url.searchParams.append('working_hours[start]', workingHours.start);
-    url.searchParams.append('working_hours[end]', workingHours.end);
+    const params = new URLSearchParams({
+      duration,
+      start_date: startDate,
+      end_date: endDate,
+      'working_hours[start]': workingHours.start,
+      'working_hours[end]': workingHours.end
+    });
 
-    const response = await fetch(url);
+    const response = await fetch(`${this.baseUrl}/available-slots?${params}`);
 
     if (!response.ok) {
       throw new Error(`Failed to find available slots: ${response.statusText}`);
