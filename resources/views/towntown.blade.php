@@ -18,6 +18,8 @@
   @else
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   @endif
+
+  <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
 <body class="antialiased text-gray-900 bg-white font-inter with-agent">
@@ -133,5 +135,4 @@
   </script>
 </body>
 
-</html>
 </html>

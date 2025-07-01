@@ -1,6 +1,6 @@
 import { RealtimeClient } from '../realtime-api-beta/lib/client.js';
 import { WavRecorder, WavStreamPlayer } from '../lib/wavtools/index.js';
-import { GoogleCalendarService } from '../services/google-calendar.service.js';
+import { AppointmentService } from '../services/appointment.service.js';
 
 const agents = [
   { name: 'prospecting-agent', file: 'prospecting-agent.agent.js' },
@@ -224,14 +224,7 @@ async function connectConversation() {
   const agentConfig = await import(`./agents/${selectedAgent.file}`);
 
   if (selectedAgent.name === 'reception-agent') {
-    const calendarService = new GoogleCalendarService(
-      import.meta.env.VITE_GOOGLE_CLIENT_ID,
-      import.meta.env.VITE_GOOGLE_API_KEY,
-      ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
-      ['https://www.googleapis.com/auth/calendar']
-    );
-
-    await calendarService.initialize();
+    const appointmentService = new AppointmentService();
 
     client.addTool({
       name: "verifierDisponibiliteCalendrier",
@@ -256,8 +249,7 @@ async function connectConversation() {
       }
     }, async (args) => {
       try {
-        await calendarService.authenticate();
-        const creneauxDisponibles = await calendarService.findAvailableSlots(
+        const creneauxDisponibles = await appointmentService.findAvailableSlots(
           args.dureeRendezVous,
           args.dateDebut,
           args.dateFin
@@ -302,8 +294,7 @@ async function connectConversation() {
       }
     }, async (args) => {
       try {
-        await calendarService.authenticate();
-        const resultat = await calendarService.createAppointment(
+        const resultat = await appointmentService.createAppointment(
           args.resume,
           args.description || '',
           args.dateHeureDebut,
