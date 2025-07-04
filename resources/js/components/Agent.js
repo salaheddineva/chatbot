@@ -2,10 +2,14 @@ import { RealtimeClient } from '../realtime-api-beta/lib/client.js';
 import { WavRecorder, WavStreamPlayer } from '../lib/wavtools/index.js';
 import { AppointmentService } from '../services/appointment.service.js';
 
+import * as ProspectionAgent from './agents/prospecting-agent.agent.js';
+import * as ReceptionAgent from './agents/reception-agent.agent.js';
+import * as AssistantAgent from './agents/assistant-agent.agent.js';
+
 const agents = [
-  { name: 'prospecting-agent', file: 'prospecting-agent.agent.js' },
-  { name: 'reception-agent', file: 'reception-agent.agent.js' },
-  { name: 'assistant-agent', file: 'assistant-agent.agent.js' },
+  { name: 'prospecting-agent', agent: ProspectionAgent },
+  { name: 'reception-agent', agent: ReceptionAgent },
+  { name: 'assistant-agent', agent: AssistantAgent },
 ]
 
 const APP_ID = "chatbot-app-d72849aef615"
@@ -221,7 +225,7 @@ async function connectConversation() {
     await toggleChat();
     return;
   }
-  const agentConfig = await import(`./agents/${selectedAgent.file}`);
+  const agentConfig = selectedAgent.agent?.instructions || {};
 
   if (selectedAgent.name === 'reception-agent') {
     const appointmentService = new AppointmentService();
