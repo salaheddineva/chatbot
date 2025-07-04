@@ -178,7 +178,8 @@ async function toggleChat() {
   const chatbotFace = window.document.getElementById('chatbot-face');
   const chatbotWave = window.document.getElementById('chatbot-wave');
   const startChatButton = window.document.getElementById('start-chat');
-  if (!chatbotFace || !chatbotWave || !startChatButton) return;
+  const agentSelectContainer = window.document.getElementById('agent-select-container');
+  if (!chatbotFace || !chatbotWave || !startChatButton || !agentSelectContainer) return;
 
   chatbotWave.style.visibility = isConnected ? 'hidden' : 'visible';
   chatbotFace.src = isConnected
@@ -187,6 +188,18 @@ async function toggleChat() {
   startChatButton.innerText = isConnected
     ? 'Commencer la discussion'
     : 'Terminer la discussion';
+
+  if (isConnected) {
+    agentSelectContainer.classList.remove('fade-out');
+    agentSelectContainer.classList.add('fade-in');
+    agentSelectContainer.style.display = 'block';
+  } else {
+    agentSelectContainer.classList.remove('fade-in');
+    agentSelectContainer.classList.add('fade-out');
+    setTimeout(() => {
+      agentSelectContainer.style.display = 'none';
+    }, 300);
+  }
 
   isConnected
     ? await disconnectConversation()
@@ -199,11 +212,16 @@ async function closeChat() {
   const chatbotFace = window.document.getElementById('chatbot-face');
   const chatbotWave = window.document.getElementById('chatbot-wave');
   const startChatButton = window.document.getElementById('start-chat');
-  if (!chatbotFace || !chatbotWave || !startChatButton) return;
+  const agentSelectContainer = window.document.getElementById('agent-select-container');
+  if (!chatbotFace || !chatbotWave || !startChatButton || !agentSelectContainer) return;
 
   chatbotWave.style.visibility = 'hidden';
   chatbotFace.src = `${ASSET_URL_BASE}/${BOT_ACTIONS.NORMAL}.png`;
   startChatButton.innerText = 'Commencer la discussion';
+
+  agentSelectContainer.classList.remove('fade-out');
+  agentSelectContainer.classList.add('fade-in');
+  agentSelectContainer.style.display = 'block';
 
   await disconnectConversation();
 }

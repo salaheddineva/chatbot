@@ -21,6 +21,38 @@
 
   <meta name="csrf-token" content="{{ csrf_token() }}">
   @laravelPWA
+  
+  <style>
+    .fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    .fade-out {
+      animation: fadeOut 0.3s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+    }
+  </style>
 </head>
 
 <body class="antialiased text-gray-900 bg-white font-inter with-agent">
@@ -39,7 +71,7 @@
         </div>
 
         <form class="space-y-6">
-          <div class="space-y-2">
+          <div class="space-y-2 transition-opacity duration-300" id="agent-select-container">
             <label for="agent-select" class="block text-sm font-medium text-gray-700">
               Choisir un Agent
             </label>
