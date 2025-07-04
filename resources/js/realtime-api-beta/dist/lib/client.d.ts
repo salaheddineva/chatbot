@@ -4,7 +4,7 @@
  */
 /**
  * @typedef {Object} AudioTranscriptionType
- * @property {"whisper-1"} model
+ * @property {"gpt-4o-transcribe"} model
  */
 /**
  * @typedef {Object} TurnDetectionServerVadType
@@ -313,7 +313,7 @@ export class RealtimeClient extends RealtimeEventHandler {
  */
 export type AudioFormatType = "pcm16" | "g711_ulaw" | "g711_alaw";
 export type AudioTranscriptionType = {
-    model: "whisper-1";
+    model: "gpt-4o-transcribe";
 };
 export type TurnDetectionServerVadType = {
     type: "server_vad";

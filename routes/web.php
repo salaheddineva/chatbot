@@ -1,10 +1,15 @@
 <?php
 
+use App\Http\Controllers\AppointmentController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Response;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::get('/towntown', function () {
+    return view('towntown');
 });
 
 Route::get('/resources/images/{filename}', function($filename){
@@ -20,3 +25,5 @@ Route::get('/resources/images/{filename}', function($filename){
         'Content-Disposition' => 'inline; filename="'.$filename.'"'
     ]);
 });
+
+Route::get('/appointments', [AppointmentController::class, 'index'])->name('appointments.index');

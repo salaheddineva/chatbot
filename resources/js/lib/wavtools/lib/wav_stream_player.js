@@ -19,6 +19,7 @@ export class WavStreamPlayer {
     this.analyser = null;
     this.trackSampleOffsets = {};
     this.interruptedTrackIds = {};
+    this.activeTracks = {};
   }
 
   /**
@@ -81,10 +82,14 @@ export class WavStreamPlayer {
       if (event === 'stop') {
         streamNode.disconnect();
         this.stream = null;
+        this.activeTracks = {};
       } else if (event === 'offset') {
         const { requestId, trackId, offset } = e.data;
         const currentTime = offset / this.sampleRate;
         this.trackSampleOffsets[requestId] = { trackId, offset, currentTime };
+      } else if (event === 'track_complete') {
+        const { trackId } = e.data;
+        delete this.activeTracks[trackId];
       }
     };
     this.analyser.disconnect();
@@ -109,6 +114,9 @@ export class WavStreamPlayer {
     if (!this.stream) {
       this._start();
     }
+    
+    this.activeTracks[trackId] = true;
+    
     let buffer;
     if (arrayBuffer instanceof Int16Array) {
       buffer = arrayBuffer;
@@ -152,8 +160,21 @@ export class WavStreamPlayer {
    * @param {boolean} [interrupt]
    * @returns {{trackId: string|null, offset: number, currentTime: number}}
    */
-  async interrupt() {
-    return this.getTrackSampleOffset(true);
+  interrupt() {
+    const result = this.getTrackSampleOffset(true);
+    if (result?.trackId) {
+      delete this.activeTracks[result.trackId];
+    }
+    return result;
+  }
+
+  /**
+   * Checks if the WAV stream player is currently playing any audio tracks.
+   * 
+   * @returns {boolean} True if there are active tracks playing, false otherwise
+   */
+  isPlaying() {
+    return Object.keys(this.activeTracks).length > 0;
   }
 }
 

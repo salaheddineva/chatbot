@@ -10,7 +10,7 @@ import { RealtimeUtils } from './utils.js';
 
 /**
  * @typedef {Object} AudioTranscriptionType
- * @property {"whisper-1"} model
+ * @property {"gpt-4o-transcribe"} model
  */
 
 /**
@@ -209,7 +209,7 @@ export class RealtimeClient extends RealtimeEventHandler {
     this.sessionConfig = {};
     this.transcriptionModels = [
       {
-        model: 'whisper-1',
+        model: 'gpt-4o-transcribe',
       },
     ];
     this.defaultServerVadConfig = {
