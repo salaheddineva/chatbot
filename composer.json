@@ -12,7 +12,8 @@
         "laravel/tinker": "^2.9",
         "laravel/vapor-cli": "^1.65",
         "laravel/vapor-core": "^2.37",
-        "league/mime-type-detection": "^1.16"
+        "league/mime-type-detection": "^1.16",
+        "silviolleite/laravelpwa": "^2.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

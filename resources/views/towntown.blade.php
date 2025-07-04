@@ -20,6 +20,7 @@
   @endif
 
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  @laravelPWA
 </head>
 
 <body class="antialiased text-gray-900 bg-white font-inter with-agent">
