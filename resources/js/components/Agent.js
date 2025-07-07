@@ -1,6 +1,6 @@
 import { RealtimeClient } from '../realtime-api-beta/lib/client.js';
 import { WavRecorder, WavStreamPlayer } from '../lib/wavtools/index.js';
-import { AppointmentService } from '../services/appointment.service.js';
+import { getToolByName } from './tools/index.js';
 
 import * as ProspectionAgent from './agents/prospecting-agent.agent.js';
 import * as ReceptionAgent from './agents/reception-agent.agent.js';
@@ -246,88 +246,11 @@ async function connectConversation() {
   const agentConfig = selectedAgent.agent?.instructions || {};
 
   if (selectedAgent.name === 'reception-agent') {
-    const appointmentService = new AppointmentService();
-
-    client.addTool({
-      name: "verifierDisponibiliteCalendrier",
-      description: "Vérifier le calendrier pour les créneaux de rendez-vous disponibles",
-      parameters: {
-        type: "object",
-        properties: {
-          dateDebut: {
-            type: "string",
-            description: "Date de début au format YYYY-MM-DD"
-          },
-          dateFin: {
-            type: "string",
-            description: "Date de fin au format YYYY-MM-DD"
-          },
-          dureeRendezVous: {
-            type: "number",
-            description: "Durée du rendez-vous en minutes"
-          }
-        },
-        required: ["dateDebut", "dateFin", "dureeRendezVous"]
-      }
-    }, async (args) => {
-      try {
-        const creneauxDisponibles = await appointmentService.findAvailableSlots(
-          args.dureeRendezVous,
-          args.dateDebut,
-          args.dateFin
-        );
-        return { succes: true, creneauxDisponibles };
-      } catch (error) {
-        console.error(error);
-        return { succes: false, erreur: error.message };
-      }
-    });
-
-    client.addTool({
-      name: "planifierRendezVous",
-      description: "Planifier un rendez-vous dans le calendrier",
-      parameters: {
-        type: "object",
-        properties: {
-          resume: {
-            type: "string",
-            description: "Titre ou résumé du rendez-vous"
-          },
-          description: {
-            type: "string",
-            description: "Description détaillée du rendez-vous"
-          },
-          dateHeureDebut: {
-            type: "string",
-            description: "Heure de début au format ISO (YYYY-MM-DDTHH:MM:SS)"
-          },
-          dateHeureFin: {
-            type: "string",
-            description: "Heure de fin au format ISO (YYYY-MM-DDTHH:MM:SS)"
-          },
-          emailsParticipants: {
-            type: "array",
-            items: {
-              type: "string"
-            },
-            description: "Liste des adresses email des participants"
-          }
-        },
-        required: ["resume", "dateHeureDebut", "dateHeureFin"]
-      }
-    }, async (args) => {
-      try {
-        const resultat = await appointmentService.createAppointment(
-          args.resume,
-          args.description || '',
-          args.dateHeureDebut,
-          args.dateHeureFin,
-          args.emailsParticipants || []
-        );
-        return { succes: true, rendezVous: resultat };
-      } catch (error) {
-        return { succes: false, erreur: error.message };
-      }
+    [
+      getToolByName('planify_meeting'),
+      getToolByName('verify_disponibility_calendar')
+    ].forEach(({ name, description, parameters, action }) => {
+      if (!client.tools[name]) client.addTool({ name, description, parameters }, action);
     });
   }
 
