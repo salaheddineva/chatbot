@@ -30,7 +30,7 @@ client.updateSession({ instructions: 'You are a great, upbeat friend.' });
 client.updateSession({ voice: 'alloy' });
 client.updateSession({
   turn_detection: { type: 'none' }, // or 'server_vad'
-  input_audio_transcription: { model: 'whisper-1' },
+  input_audio_transcription: { model: 'gpt-4o-transcribe' },
 });
 
 // Set up event handling

@@ -41,7 +41,7 @@ if (!API_KEY) {
 
 const client = new RealtimeClient({
   apiKey: API_KEY,
-  model: 'gpt-4o-realtime-preview-2024-10-01',
+  model: 'gpt-4o-realtime-preview-2025-06-03',
 });
 
 let micInstance;

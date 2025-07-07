@@ -14,8 +14,11 @@ environments:
         memory: 1024
         cli-memory: 512
         runtime: 'php-8.3:al2'
+        database: Staging
         build:
             - 'COMPOSER_MIRROR_PATH_REPOS=1 composer install'
             - 'php artisan event:cache'
             - 'php vendor/bin/vapor env:pull staging && cat .env.staging >> .env'
             - 'npm ci && npm run build && rm -rf node_modules'
+        deploy:
+            - 'php artisan migrate --force'
